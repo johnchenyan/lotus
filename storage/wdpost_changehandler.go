@@ -27,22 +27,25 @@ type changeHandlerAPI interface {
 }
 
 type changeHandler struct {
-	api        changeHandlerAPI
-	actor      address.Address
-	proveHdlr  *proveHandler
-	submitHdlr *submitHandler
+	api            changeHandlerAPI
+	actor          address.Address
+	proveHdlr      *proveHandler
+	submitHdlr     *submitHandler
+	fastSubmitHdlr *fastSubmitHandler
 }
 
 func newChangeHandler(api changeHandlerAPI, actor address.Address) *changeHandler {
 	posts := newPostsCache()
 	p := newProver(api, posts)
 	s := newSubmitter(api, posts)
-	return &changeHandler{api: api, actor: actor, proveHdlr: p, submitHdlr: s}
+	f := newFastSubmitter(api)                                                                    // ipfsunion add
+	return &changeHandler{api: api, actor: actor, proveHdlr: p, submitHdlr: s, fastSubmitHdlr: f} // ipfsunion modify
 }
 
 func (ch *changeHandler) start() {
 	go ch.proveHdlr.run()
 	go ch.submitHdlr.run()
+	go ch.fastSubmitHdlr.run() // ipfsunion add
 }
 
 func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advance *types.TipSet) error {
@@ -75,12 +78,21 @@ func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advan
 	case <-ctx.Done():
 	}
 
+	/* ipfsunion begin */
+	select {
+	case ch.fastSubmitHdlr.hcs <- hc:
+	case <-ch.fastSubmitHdlr.shutdownCtx.Done():
+	case <-ctx.Done():
+	}
+	/* ipfsunion end */
+
 	return nil
 }
 
 func (ch *changeHandler) shutdown() {
 	ch.proveHdlr.shutdown()
 	ch.submitHdlr.shutdown()
+	ch.fastSubmitHdlr.shutdown() //ipfsunion add
 }
 
 func (ch *changeHandler) currentTSDI() (*types.TipSet, *dline.Info) {

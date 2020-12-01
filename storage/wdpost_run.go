@@ -637,7 +637,17 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 			continue
 		}
 
-		posts = append(posts, params)
+		//posts = append(posts, params) // ipfsunion del
+
+		/*ipfsunion begin*/
+		s.ch.fastSubmitHdlr.postNotify <- &postItem{
+			di:        &di,
+			partIndex: uint64(batchIdx),
+			ts:        ts,
+			params:    &params,
+		}
+		log.Infow("notify post to fastSubmitHandler", "height", ts.Height(), "open", di.Open, "partIndex", batchIdx)
+		/*ipfsunion end*/
 	}
 
 	return posts, nil
@@ -661,6 +671,9 @@ func (s *WindowPoStScheduler) batchPartitions(partitions []api.Partition) ([][]a
 
 	// The number of messages will be:
 	// ceiling(number of partitions / partitions per message)
+
+	partitionsPerMsg = 1 // ipfsunion add
+
 	batchCount := len(partitions) / partitionsPerMsg
 	if len(partitions)%partitionsPerMsg != 0 {
 		batchCount++
