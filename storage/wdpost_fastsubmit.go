@@ -73,6 +73,7 @@ func (s *fastSubmitHandler) run() {
 			s.trySubmit()
 
 		case hc := <-s.hcs:
+			log.Infof("fast submit fastSubmitHandler::run chain head notify, revert [%v], advance [%v]", hc.revert, hc.advance) // to remove
 			s.currentTs = hc.advance
 			s.currentCtx = hc.ctx
 			s.revert = hc.revert
@@ -119,6 +120,7 @@ func (s *fastSubmitHandler) trySubmit() {
 			if res == nil || res.submitState != SubmitStateStart {
 				continue
 			}
+			log.Infof("fast submit fastSubmitHandler::trySubmit, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
 			res.submitState = SubmitStateSubmitting
 			res.abort = s.api.startSubmitPoST(s.currentCtx, s.currentTs, post.di, []miner.SubmitWindowedPoStParams{*post.params}, func(err error) {
 				res.err = err
@@ -135,6 +137,7 @@ func (s *fastSubmitHandler) addPost(post *postItem) {
 	if _, ok := s.posts[post.di.Open]; !ok {
 		s.posts[post.di.Open] = make(map[uint64]*postItem)
 	}
+	log.Infof("fast submit fastSubmitHandler::addPost, deadline [%v], partition [%v]", post.di.Index, post.partIndex)
 	s.posts[post.di.Open][post.partIndex] = post
 }
 
@@ -159,13 +162,16 @@ func (s *fastSubmitHandler) tryClear() {
 			expired := s.currentTs.Height() >= res.di.Close
 			if res.submitState == SubmitStateSubmitting && (revertedToPrevDL || expired) {
 				if res.abort != nil {
+					log.Warnf("fast submit fastSubmitHandler::tryClear SubmitStateSubmitting abort, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
 					res.abort()
 				}
 			} else if res.submitState == SubmitStateComplete && revertedToPrevDL {
+				log.Warnf("fast submit fastSubmitHandler::tryClear reset submitState, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
 				res.submitState = SubmitStateStart
 			}
 
 			if expired {
+				log.Infof("fast submit fastSubmitHandler::tryClear delete submitRes, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
 				delete(s.submitRes, open)
 			}
 		}
@@ -173,6 +179,7 @@ func (s *fastSubmitHandler) tryClear() {
 	for open, val := range s.posts {
 		for _, res := range val {
 			if s.currentTs.Height() >= res.di.Close {
+				log.Infof("fast submit fastSubmitHandler::tryClear delete post, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
 				delete(s.posts, open)
 				break
 			}

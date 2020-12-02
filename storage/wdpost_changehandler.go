@@ -483,6 +483,7 @@ func (s *submitHandler) submitIfReady(ctx context.Context, advance *types.TipSet
 	// If there was nothing to prove, move straight to the complete state
 	if len(posts) == 0 {
 		pw.submitState = SubmitStateComplete
+		log.Warnf("fast submit submitHandler::submitIfReady posts len 0")
 		return
 	}
 

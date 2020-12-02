@@ -443,20 +443,53 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 			}
 		)
 
-		if recoveries, sigmsg, err = s.checkNextRecoveries(context.TODO(), declDeadline, partitions, ts.Key()); err != nil {
-			// TODO: This is potentially quite bad, but not even trying to post when this fails is objectively worse
-			log.Errorf("checking sector recoveries: %v", err)
+		/* ipfsunion add begin */
+		var recovers [][]api.Partition
+		var tmp []api.Partition
+		for partIdx, parttion := range partitions {
+			if partIdx%3 == 0 && partIdx != 0 {
+				recovers = append(recovers, tmp)
+				tmp = tmp[0:0]
+			}
+			tmp = append(tmp, parttion)
+			if partIdx == len(partitions)-1 {
+				recovers = append(recovers, tmp)
+			}
 		}
 
-		s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStRecoveries], func() interface{} {
-			j := WdPoStRecoveriesProcessedEvt{
-				evtCommon:    s.getEvtCommon(err),
-				Declarations: recoveries,
-				MessageCID:   optionalCid(sigmsg),
+		for _, recover := range recovers {
+			if recoveries, sigmsg, err = s.checkNextRecoveries(context.TODO(), declDeadline, recover, ts.Key()); err != nil {
+				// TODO: This is potentially quite bad, but not even trying to post when this fails is objectively worse
+				log.Errorf("checking sector recoveries: %v", err)
 			}
-			j.Error = err
-			return j
-		})
+
+			s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStRecoveries], func() interface{} {
+				j := WdPoStRecoveriesProcessedEvt{
+					evtCommon:    s.getEvtCommon(err),
+					Declarations: recoveries,
+					MessageCID:   optionalCid(sigmsg),
+				}
+				j.Error = err
+				return j
+			})
+
+		}
+		/* ipfsunion add end */
+
+		//if recoveries, sigmsg, err = s.checkNextRecoveries(context.TODO(), declDeadline, partitions, ts.Key()); err != nil {
+		//	// TODO: This is potentially quite bad, but not even trying to post when this fails is objectively worse
+		//	log.Errorf("checking sector recoveries: %v", err)
+		//}
+		//
+		//s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStRecoveries], func() interface{} {
+		//	j := WdPoStRecoveriesProcessedEvt{
+		//		evtCommon:    s.getEvtCommon(err),
+		//		Declarations: recoveries,
+		//		MessageCID:   optionalCid(sigmsg),
+		//	}
+		//	j.Error = err
+		//	return j
+		//}) // ipfsunion del
 
 		if ts.Height() > build.UpgradeIgnitionHeight {
 			return // FORK: declaring faults after ignition upgrade makes no sense
