@@ -233,7 +233,10 @@ func (s *WindowPoStScheduler) checkSectors(ctx context.Context, check bitfield.B
 	return sbf, nil
 }
 
-func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uint64, partitions []api.Partition, tsk types.TipSetKey) ([]miner.RecoveryDeclaration, *types.SignedMessage, error) {
+func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uint64, partitions []api.Partition, tsk types.TipSetKey, startIdx int) ([]miner.RecoveryDeclaration, *types.SignedMessage, error) { // ipfsunion modify
+	log.Infof("WindowPoStScheduler::checkNextRecoveries enter") // ipfsunion add
+	defer log.Infof("WindowPoStScheduler::checkNextRecoveries out") // ipfsunion add
+
 	ctx, span := trace.StartSpan(ctx, "storage.checkNextRecoveries")
 	defer span.End()
 
@@ -274,9 +277,11 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 			continue
 		}
 
+		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx) // ipfsunion add
+
 		params.Recoveries = append(params.Recoveries, miner.RecoveryDeclaration{
 			Deadline:  dlIdx,
-			Partition: uint64(partIdx),
+			Partition: uint64(partIdx+startIdx), //ipfsunion modify
 			Sectors:   recovered,
 		})
 	}
@@ -457,11 +462,13 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 			}
 		}
 
+		recoverStartIdx := 0
 		for _, recover := range recovers {
-			if recoveries, sigmsg, err = s.checkNextRecoveries(context.TODO(), declDeadline, recover, ts.Key()); err != nil {
+			if recoveries, sigmsg, err = s.checkNextRecoveries(context.TODO(), declDeadline, recover, ts.Key(), recoverStartIdx); err != nil {
 				// TODO: This is potentially quite bad, but not even trying to post when this fails is objectively worse
 				log.Errorf("checking sector recoveries: %v", err)
 			}
+			recoverStartIdx += len(recover)
 
 			s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStRecoveries], func() interface{} {
 				j := WdPoStRecoveriesProcessedEvt{
@@ -472,7 +479,6 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 				j.Error = err
 				return j
 			})
-
 		}
 		/* ipfsunion add end */
 

@@ -108,6 +108,9 @@ func (s *fastSubmitHandler) trySubmit() {
 		return
 	}
 
+	log.Infof("fast submit trySubmit enter")
+	defer log.Infof("fast submit trySubmit out")
+
 	for _, val := range s.posts {
 		for partIndex, post := range val {
 			if post == nil || post.params == nil || post.di == nil {
@@ -126,6 +129,7 @@ func (s *fastSubmitHandler) trySubmit() {
 				res.err = err
 				s.submitResNotify <- res
 			})
+			log.Infof("fast submit fastSubmitHandler::trySubmit, deadlines [%v], partition [%v] ------ out", res.di.Index, res.partIndex)
 		}
 	}
 }
@@ -180,7 +184,7 @@ func (s *fastSubmitHandler) tryClear() {
 	for open, val := range s.posts {
 		for _, res := range val {
 			if s.currentTs.Height() >= res.di.Close {
-				log.Infof("fast submit fastSubmitHandler::tryClear delete post, deadlines [%v], partition [%v]", res.di.Index, res.partIndex)
+				log.Infof("fast submit fastSubmitHandler::tryClear delete post, deadlines [%v]", res.di.Index)
 				delete(s.posts, open)
 				break
 			}

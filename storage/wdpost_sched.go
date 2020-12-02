@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/filecoin-project/lotus/lib/ipfsunion"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -76,6 +77,13 @@ type changeHandlerAPIImpl struct {
 }
 
 func (s *WindowPoStScheduler) Run(ctx context.Context) {
+	/* ipfsunion add begin */
+	if !ipfsunion.WindowPost {
+		log.Infof("(MultiMiner) WindowPost is false, WindowPoStScheduler return")
+		return
+	}
+	/* ipfsunion add end */
+
 	// Initialize change handler
 	chImpl := &changeHandlerAPIImpl{storageMinerApi: s.api, WindowPoStScheduler: s}
 	s.ch = newChangeHandler(chImpl, s.actor)

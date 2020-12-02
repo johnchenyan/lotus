@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/filecoin-project/lotus/lib/ipfsunion"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -54,6 +55,10 @@ var runCmd = &cli.Command{
 			Usage: "manage open file limit",
 			Value: true,
 		},
+		&cli.BoolFlag{
+			Name:  "windowpost",
+			Usage: "windowpost",
+		},
 	},
 	Action: func(cctx *cli.Context) error {
 		if !cctx.Bool("enable-gpu-proving") {
@@ -62,6 +67,12 @@ var runCmd = &cli.Command{
 				return err
 			}
 		}
+
+		/* ipfsunion begin */
+		if cctx.Bool("windowpost") {
+			ipfsunion.WindowPost = true
+		}
+		/* ipfsunion end */
 
 		nodeApi, ncloser, err := lcli.GetFullNodeAPI(cctx)
 		if err != nil {
