@@ -150,6 +150,7 @@ func (s *fastSubmitHandler) checkOrInitRes(di dline.Info, partIndex uint64, ts *
 			submitState: SubmitStateStart,
 			di:          &di,
 			ts:          ts,
+			partIndex:	 partIndex,
 		}
 	}
 	return s.submitRes[di.Open][partIndex]
