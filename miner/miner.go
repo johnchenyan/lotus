@@ -222,7 +222,7 @@ minerLoop:
 			if !m.niceSleep(time.Duration(build.BlockDelaySecs) * time.Second) {
 				continue minerLoop
 			}
-			//continue
+			continue
 		}
 
 		b, err := m.mineOne(ctx, base)
