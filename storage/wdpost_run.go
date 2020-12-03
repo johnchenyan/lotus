@@ -466,30 +466,18 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 
 		/* ipfsunion add begin */
 		var recovers [][]api.Partition
-		//var tmp []api.Partition
-		//for partIdx, parttion := range partitions {
-		//	if partIdx%3 == 0 && partIdx != 0 {
-		//		recovers = append(recovers, tmp)
-		//		tmp = tmp[0:0]
-		//	}
-		//	tmp = append(tmp, parttion)
-		//	if partIdx == len(partitions)-1 {
-		//		recovers = append(recovers, tmp)
-		//	}
-		//}
-
 		var partitionsCopy = partitions
 		for {
 			if len(partitionsCopy) ==0{
 				break
 			}
 			var tmp []api.Partition
-			if len(partitionsCopy) < 3{
+			if len(partitionsCopy) < 4{
 				tmp = partitionsCopy
 				partitionsCopy = nil
 			}else{
-				tmp = partitionsCopy[0:3]
-				partitionsCopy=partitionsCopy[3:]
+				tmp = partitionsCopy[0:4]
+				partitionsCopy=partitionsCopy[4:]
 			}
 
 			recovers= append(recovers,tmp)
