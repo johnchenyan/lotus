@@ -257,6 +257,7 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 		}
 
 		if uc == 0 {
+			log.Warnf("WindowPoStScheduler::checkNextRecoveries uc == 0")
 			continue
 		}
 
@@ -274,12 +275,13 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 		}
 
 		if recoveredCount == 0 {
+			log.Warnf("WindowPoStScheduler::checkNextRecoveries recoveredCount == 0")
 			continue
 		}
 
 		si, _ := partition.AllSectors.All(100)
 		log.Warnf("WindowPoStScheduler::checkNextRecoveries start index : [%v]", startIdx)
-		log.Warnf("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], all sectors [%v]", si)
+		log.Warnf("WindowPoStScheduler::checkNextRecoveries, all sectors [%v]", si)
 		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx, recoveredCount) // ipfsunion add
 
 		params.Recoveries = append(params.Recoveries, miner.RecoveryDeclaration{
@@ -468,6 +470,12 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 				recovers = append(recovers, tmp)
 			}
 		}
+
+		log.Warnf("chenqiong partitions len: %+v", len(partitions))
+		log.Warnf("chenqiong partitions: %+v", partitions)
+
+		log.Warnf("chenqiong recover len: %+v", len(recovers))
+		log.Warnf("chenqiong recover: %+v", recovers)
 
 		recoverStartIdx := 0
 		for _, recover := range recovers {
