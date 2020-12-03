@@ -247,7 +247,7 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 
 	for partIdx, partition := range partitions {
 
-		//si, _ := partition.AllSectors.All(100)
+		si, _ := partition.AllSectors.All(100)
 		//fs, _ := partition.FaultySectors.All(100)
 		//rs, _ := partition.RecoveringSectors.All(100)
 		//as, _ := partition.ActiveSectors.All(100)
