@@ -246,6 +246,16 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 	}
 
 	for partIdx, partition := range partitions {
+
+		//si, _ := partition.AllSectors.All(100)
+		//fs, _ := partition.FaultySectors.All(100)
+		//rs, _ := partition.RecoveringSectors.All(100)
+		//as, _ := partition.ActiveSectors.All(100)
+
+		log.Warnf("WindowPoStScheduler::checkNextRecoveries start index : [%v]", startIdx)
+		log.Warnf("WindowPoStScheduler::checkNextRecoveries, all sectors [%v], ", si)
+
+
 		unrecovered, err := bitfield.SubtractBitField(partition.FaultySectors, partition.RecoveringSectors)
 		if err != nil {
 			return nil, nil, xerrors.Errorf("subtracting recovered set from fault set: %w", err)
@@ -279,9 +289,6 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 			continue
 		}
 
-		si, _ := partition.AllSectors.All(100)
-		log.Warnf("WindowPoStScheduler::checkNextRecoveries start index : [%v]", startIdx)
-		log.Warnf("WindowPoStScheduler::checkNextRecoveries, all sectors [%v]", si)
 		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx, recoveredCount) // ipfsunion add
 
 		params.Recoveries = append(params.Recoveries, miner.RecoveryDeclaration{
@@ -470,12 +477,36 @@ func (s *WindowPoStScheduler) runPost(ctx context.Context, di dline.Info, ts *ty
 				recovers = append(recovers, tmp)
 			}
 		}
+		log.Errorf("chenqiong deadline index %v", declDeadline)
+		for index, partition := range partitions {
+			si, _ := partition.AllSectors.All(100)
+			fs, _ := partition.FaultySectors.All(100)
+			rs, _ := partition.RecoveringSectors.All(100)
+			as, _ := partition.ActiveSectors.All(100)
+			log.Infof("chenqiong partition [%v], AllSectors %v", index, si)
+			log.Infof("chenqiong partition [%v], FaultySectors %v", index, fs)
+			log.Infof("chenqiong partition [%v], RecoveringSectors %v", index, rs)
+			log.Infof("chenqiong partition [%v], ActiveSectors %v", index, as)
+		}
+
+		for _, rs := range recovers {
+			for i, r := range rs {
+				si, _ := r.AllSectors.All(100)
+				fs, _ := r.FaultySectors.All(100)
+				rs, _ := r.RecoveringSectors.All(100)
+				as, _ := r.ActiveSectors.All(100)
+				log.Infof("chenqiong recover partition [%v], recover AllSectors %v", i, si)
+				log.Infof("chenqiong recover partition [%v], FaultySectors %v", i, fs)
+				log.Infof("chenqiong recover partition [%v], RecoveringSectors %v", i, rs)
+				log.Infof("chenqiong recover partition [%v], ActiveSectors %v", i, as)
+			}
+		}
 
 		log.Warnf("chenqiong partitions len: %+v", len(partitions))
-		log.Warnf("chenqiong partitions: %+v", partitions)
+		//log.Warnf("chenqiong partitions: %+v", partitions)
 
 		log.Warnf("chenqiong recover len: %+v", len(recovers))
-		log.Warnf("chenqiong recover: %+v", recovers)
+		//log.Warnf("chenqiong recover: %+v", recovers)
 
 		recoverStartIdx := 0
 		for _, recover := range recovers {
