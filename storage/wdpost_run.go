@@ -277,7 +277,9 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 			continue
 		}
 
-		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx) // ipfsunion add
+		si, _ := partition.AllSectors.All(100)
+		log.Warnf("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], all sectors [%v]", si)
+		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx, recoveredCount) // ipfsunion add
 
 		params.Recoveries = append(params.Recoveries, miner.RecoveryDeclaration{
 			Deadline:  dlIdx,
@@ -294,6 +296,10 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 
 		return recoveries, nil, nil
 	}
+
+	log.Infof("WindowPoStScheduler::checkNextRecoveries, params: %+v", *params)
+	log.Infof("WindowPoStScheduler::checkNextRecoveries, params recovers: %+v", params.Recoveries)
+	//log.Infof("WindowPoStScheduler::checkNextRecoveries, : %+v", params)
 
 	enc, aerr := actors.SerializeParams(params)
 	if aerr != nil {
