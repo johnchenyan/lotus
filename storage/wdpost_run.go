@@ -278,6 +278,7 @@ func (s *WindowPoStScheduler) checkNextRecoveries(ctx context.Context, dlIdx uin
 		}
 
 		si, _ := partition.AllSectors.All(100)
+		log.Warnf("WindowPoStScheduler::checkNextRecoveries start index : [%v]", startIdx)
 		log.Warnf("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], all sectors [%v]", si)
 		log.Infof("WindowPoStScheduler::checkNextRecoveries, deadline [%v], partition [%v], recoveredCount [%v]", dlIdx, partIdx+startIdx, recoveredCount) // ipfsunion add
 
